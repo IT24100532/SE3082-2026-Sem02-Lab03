@@ -1,0 +1,35 @@
+Exercise 2: parallel Pi with OpenMP
+Run on: Debian Linux container (Docker), gcc 14.2, 8 logical cpus. Build: make   Run: make run
+
+I parallelised the loop from Exercise 1 the easiest way: "#pragma omp parallel for".
+Compile and run:  gcc -fopenmp -O2 pi_parallel.c -o pi_parallel
+                  OMP_NUM_THREADS=<n> ./pi_parallel
+
+Results (N = 100,000,000):
+version           threads   pi                   time (s)   speedup vs serial
+serial               -      3.141592653590426    0.0991      -
+parallel             1      3.141592653590426    0.1240      0.80
+parallel             2      1.854590436003158    0.0509      1.95
+parallel             4      0.979914652507277    0.0284      3.49
+parallel             8      0.419507754920905    0.0271      3.66
+parallel            16      0.164855050633276    0.0236      4.20
+
+3. Time: the parallel version gets faster with more threads (about 3.5x with 4 threads).
+   16 threads is a little faster again but the machine only has 8 cores.
+
+Is the parallel answer correct? NO. With 2 or more threads pi is wrong, and it gets
+worse as threads are added.
+Why: sum is shared by all threads and nothing protects it (a DATA RACE). "sum += ..."
+is really three steps: read sum, add, write sum back. When two threads do this at the
+same time, one thread's write overwrites the other's, and that work is lost.
+With -O2 the compiler even keeps each thread's running total in a register and writes
+it to sum at the end, so the threads overwrite each other's whole results. For example,
+with 2 threads pi = 1.8546 = 4 x atan(0.5), which is exactly thread 0's half of the
+integral; thread 1's half was overwritten. (Lab 04 fixes this with critical / atomic.)
+So the speedup above is meaningless: it is fast, but the answer is wrong.
+
+4. How many cores? 8 logical cpus here (check yours with "nproc" on EC2).
+
+5–6. A bigger EC2 instance and its speedup need your AWS account. Run "make run" on
+both instances and compare the tables.
+7. Remember to stop the instances when you finish.

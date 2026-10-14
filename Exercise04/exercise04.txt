@@ -1,0 +1,24 @@
+Exercise 4: Pi with the Monte Carlo method, 10,000,000 points
+Run on: Debian Linux container (Docker), gcc 14.2, 8 logical cpus. Build: make   Run: make run
+
+Method (from the GeeksforGeeks example): pick random points (x, y) in the unit square;
+a point is inside the quarter circle if x^2 + y^2 <= 1; pi ~= 4 x inside / total.
+rand() is not thread-safe, so the programs use rand_r() with a seed per thread.
+
+Compile and run:  gcc -fopenmp -O2 montecarlo_parallel.c -o montecarlo_parallel
+                  OMP_NUM_THREADS=<n> ./montecarlo_parallel
+
+Results:
+version           threads   pi         inside      time (s)
+serial               -      3.141386   7853466     0.1526
+parallel             1      3.141386   7853466     0.1370
+parallel             2      1.876203   4690507     0.0931
+parallel             4      1.200889   3002222     0.0518
+parallel             8      0.802587   2006468     0.0364
+parallel            16      0.973392   2433479     0.0428
+
+Serial pi = 3.1414 (Monte Carlo is only accurate to about 3 decimal places with 10
+million points). The parallel version is up to about 4x faster, but its answer is
+WRONG with 2+ threads: the counter "inside" is shared and unprotected (data race),
+so increments from different threads overwrite each other and most are lost.
+Lab 04 Exercise 3 fixes this with a mutex (critical / atomic).
