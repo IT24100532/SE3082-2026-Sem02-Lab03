@@ -11,6 +11,3 @@ Output:
 serial:   pi = 3.141592653590426, error = 6.33e-13, time = 0.099066 s
 
 The answer is correct to 12 decimal places.
-
-Steps 4–7 (scp the program to EC2, ssh in, compile and run there, scp the results back)
-need your own EC2 instance; the commands are in Lab 02 (Parts1-5_AWS_commands.md).
